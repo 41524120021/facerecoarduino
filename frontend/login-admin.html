@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Admin - Face Attendance System</title>
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-primary);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 450px;
+      padding: var(--spacing-lg);
+    }
+
+    .login-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--white);
+      padding: var(--spacing-2xl) var(--spacing-lg);
+      text-align: center;
+    }
+
+    .login-header h1 {
+      font-size: 1.75rem;
+      margin: 0;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .login-header p {
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .login-icon {
+      font-size: 3rem;
+      margin-bottom: var(--spacing-base);
+      display: inline-block;
+    }
+
+    .login-body {
+      padding: var(--spacing-2xl) var(--spacing-lg);
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--dark);
+      font-size: 0.95rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: var(--spacing-lg);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: var(--spacing-base) var(--spacing-base) var(--spacing-base) 2.8rem;
+      border: 2px solid var(--gray-light);
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      transition: all var(--transition-fast);
+      background: var(--white);
+    }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      background: var(--white);
+    }
+
+    input[type="email"]::placeholder,
+    input[type="password"]::placeholder {
+      color: var(--gray-light);
+    }
+
+    .remember-forgot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-lg);
+      font-size: 0.9rem;
+    }
+
+    .remember-forgot input[type="checkbox"] {
+      margin-right: var(--spacing-sm);
+      cursor: pointer;
+      width: auto;
+      border: none;
+    }
+
+    .remember-forgot a {
+      color: #667eea;
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+
+    .remember-forgot a:hover {
+      color: #764ba2;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: var(--spacing-base) var(--spacing-lg);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: var(--font-weight-semibold);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .btn-login:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-login:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .login-footer {
+      text-align: center;
+      padding: var(--spacing-lg);
+      border-top: 1px solid var(--gray-light);
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .login-footer a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .alert {
+      margin-bottom: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-base) var(--spacing-lg);
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+      animation: slideIn var(--transition-base) ease-out;
+    }
+
+    .alert-danger {
+      background: var(--danger-light);
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      border-left: 4px solid var(--danger);
+    }
+
+    .alert-success {
+      background: var(--success-light);
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-left: 4px solid var(--success);
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: var(--spacing-base);
+      }
+
+      .login-body {
+        padding: var(--spacing-lg);
+      }
+
+      .login-header h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon">🔐</div>
+        <h1>Admin Panel</h1>
+        <p>Sistem Pengenalan Wajah Otomatis</p>
+      </div>
+
+      <div class="login-body">
+        <div id="alertContainer"></div>
+
+        <form id="loginForm" method="POST" action="php/admin/login.php">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <div class="input-wrapper">
+              <span class="input-icon">✉️</span>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="admin@example.com"
+                required
+                autocomplete="email"
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔑</span>
+              <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                placeholder="Masukkan password"
+                required
+                autocomplete="current-password"
+              >
+            </div>
+          </div>
+
+          <div class="remember-forgot">
+            <label>
+              <input type="checkbox" name="remember" value="1">
+              Ingat saya
+            </label>
+            <a href="#forgot">Lupa password?</a>
+          </div>
+
+          <button type="submit" class="btn-login" id="btnLogin">
+            <span id="btnText">Masuk</span>
+            <span id="btnSpinner" class="spinner spinner-sm" style="display: none;"></span>
+          </button>
+        </form>
+      </div>
+
+      <div class="login-footer">
+        Belum punya akun? <a href="register-admin.html">Daftar di sini</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const alertContainer = document.getElementById('alertContainer');
+
+    function showAlert(message, type = 'danger') {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} show`;
+      alertDiv.innerHTML = `
+        <strong>${type === 'danger' ? '❌' : '✅'}</strong> ${message}
+      `;
+      alertContainer.innerHTML = '';
+      alertContainer.appendChild(alertDiv);
+
+      if (type === 'success') {
+        setTimeout(() => {
+          alertDiv.style.opacity = '0';
+          alertDiv.style.transition = 'opacity 0.3s ease';
+        }, 2000);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        showAlert('Email dan password harus diisi!');
+        return;
+      }
+
+      // Show loading state
+      btnLogin.disabled = true;
+      btnText.style.display = 'none';
+      btnSpinner.style.display = 'inline-block';
+
+      try {
+        const response = await fetch('php/admin/login.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            email: email,
+            password: password,
+            remember: document.querySelector('input[name="remember"]').checked ? 1 : 0
+          })
+        });
+
+        const text = await response.text();
+
+        // Check if response contains HTML (error page from PHP)
+        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+          showAlert('Terjadi kesalahan server. Silakan coba lagi.');
+        } else if (text.includes('success') || response.ok) {
+          showAlert('Login berhasil! Mengalihkan...', 'success');
+          setTimeout(() => {
+            window.location.href = 'dashboard.php';
+          }, 1500);
+        } else {
+          showAlert('Email atau password salah!');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showAlert('Terjadi kesalahan. Silakan coba lagi.');
+      } finally {
+        btnLogin.disabled = false;
+        btnText.style.display = 'inline';
+        btnSpinner.style.display = 'none';
+      }
+    });
+
+    // Check for error message from PHP redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error')) {
+      showAlert(decodeURIComponent(urlParams.get('error')));
+    }
+  </script>
+</body>
+</html>
