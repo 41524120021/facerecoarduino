@@ -1,0 +1,115 @@
+
+Step-by-step koneksi tombol "Buka Pintu" ke ESP32
+
+# Install paho-mqtt:
+pip install paho-mqtt
+
+
+Di file app.py
+
+Import library paho.mqtt:
+import paho.mqtt.client as mqtt
+
+Tambahkan konfigurasi MQTT di bagian atas:
+MQTT_BROKER = "localhost"      # atau IP broker Anda
+MQTT_PORT = 1883
+MQTT_TOPIC = "esp32/pintu"
+
+Tambahkan endpoint Flask baru:
+@app.route('/buka_pintu', methods=['POST'])
+def buka_pintu():
+    client = mqtt.Client()
+    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    client.publish(MQTT_TOPIC, "BUKA")
+    client.disconnect()
+    return json.dumps({"status": "OK", "pesan": "Perintah buka pintu dikirim via MQTT"})
+
+
+Di file recognition_view.html
+ 
+Ubah bagian JavaScript tombol:
+document.getElementById("bukaPintu").addEventListener("click", () => {
+  fetch("/buka_pintu", { method: "POST" })
+    .then(res => res.json())
+    .then(data => alert(data.pesan))
+    .catch(err => alert("Gagal mengirim perintah ke server!"));
+});
+
+
+
+Di ESP32
+
+// Install library PubSubClient by Nick O'Leary...
+
+#include <WiFi.h>
+#include <PubSubClient.h>
+
+const char* ssid = "NAMA_WIFI";
+const char* password = "PASSWORD_WIFI";
+const char* mqtt_server = "192.168.1.100"; // IP broker MQTT
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+const int ledPin = 2;
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  String message;
+  for (int i = 0; i < length; i++) message += (char)payload[i];
+
+  if (message == "BUKA") {
+    digitalWrite(ledPin, HIGH);
+    delay(3000); // LED menyala 3 detik
+    digitalWrite(ledPin, LOW);
+  }
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    if (client.connect("ESP32Client")) {
+      client.subscribe("esp32/pintu");
+    } else {
+      delay(5000);
+    }
+  }
+}
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) delay(1000);
+
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+}
+
+void loop() {
+  if (!client.connected()) reconnect();
+  client.loop();
+}
+
+
+
+
+Skenario
+
+[Browser]
+   ↓ (klik tombol)
+[Flask]
+   → MQTT publish "pintu=BUKA"
+   ⏱️ Tunggu 10 detik
+   → MQTT publish "pintu=TUTUP"
+[ESP32]
+   ← Terima "pintu=BUKA" → LED ON
+   ← Terima "pintu=TUTUP" → LED OFF
+
+
+
+1. Saat tombol “Buka Pintu” ditekan:
+   - Flask publish ke MQTT: pintu=BUKA
+   - ESP32 menyalakan LED pin 2 terus menyala (tidak auto-off)
+2. Setelah 10 detik, Flask kirim lagi pesan:
+   - pintu=TUTUP
+   - ESP32 menerima pesan ini dan mematikan LED pin 2.
+

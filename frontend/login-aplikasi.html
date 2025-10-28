@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Aplikasi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      width: 100vw;
+      background: linear-gradient(135deg, #dcd6f7, #f3e8ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      height: 85%;
+      display: flex;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      background-color: white;
+    }
+
+    .left {
+      flex: 1;
+      background: linear-gradient(to bottom right, #f3e8ff, #dcd6f7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .left h1 {
+      font-size: 2.5rem;
+      color: #4a4a4a;
+      margin-bottom: 15px;
+    }
+
+    .left p {
+      font-size: 1.2rem;
+      color: #555;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .right {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #ffffff;
+      padding: 30px;
+    }
+
+    .form-box {
+      width: 100%;
+      max-width: 340px;
+      background: #ffffff;
+      padding: 30px 30px 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .form-box h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    .form-box label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    .form-box input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #f9f9f9;
+    }
+
+    .form-box button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(to right, #a55eea, #8e44ad);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .form-box button:hover {
+      background: linear-gradient(to right, #8e44ad, #a55eea);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .left {
+        display: none;
+      }
+
+      .right {
+        border-radius: 0;
+        padding: 40px 20px;
+      }
+
+      .form-box {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <div>
+        <h1>Selamat Datang 👋</h1>
+        <p>Login ke sistem monitoring kehadiran pintar.<br>
+           Didukung AI dan IoT secara real-time.</p>
+      </div>
+    </div>
+
+    <div class="right">
+      <form class="form-box" method="POST" action="../php/login-aplikasi.php">
+        <h2>Login Aplikasi</h2>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Masukkan email..." required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Masukkan password..." required>
+
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

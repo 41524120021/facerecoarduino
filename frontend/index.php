@@ -1,0 +1,107 @@
+<?php
+session_start();
+if (!isset($_SESSION['admin'])) {
+  header("Location: login-aplikasi.html");
+  exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Input Data Karyawan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header-row">
+      <h1>Input Data Karyawan</h1>
+    </div>
+
+    <div class="header-menu">
+      <div class="camera-switch">
+        <label class="switch-label">
+          <span>Status Kamera:</span>
+          <label class="switch">
+            <input type="checkbox" id="cameraToggle" checked>
+            <span class="slider round"></span>
+          </label>
+        </label>
+        <a href="../php/logout-aplikasi.php" class="logout-link">LOGOUT</a>
+      </div>
+    </div>
+
+    <!-- <a href="../php/logout-aplikasi.php" style="text-decoration:none; color:#c00; font-weight:600;">LOGOUT</a> -->
+
+    <video id="video" autoplay></video>
+
+    <button onclick="takeSnapshot()">Ambil Gambar</button>
+    <div id="thumbnails"></div>
+    <div id="preview">
+    <!-- thumbnail hasil capture akan muncul di sini -->
+    </div>
+    <form id="dataForm" method="POST" action="../php/simpan_data.php" enctype="multipart/form-data">
+      <div class="form-group"><label for="id">Nomor ID</label><input type="text" name="id" id="id" required></div>
+      <div class="form-group"><label for="nama">Nama Lengkap</label><input type="text" name="nama" id="nama" required></div>
+      <div class="form-group"><label for="gender">Jenis Kelamin</label><select name="gender" id="gender" required><option value="">-- Pilih --</option><option value="Pria">Pria</option><option value="Wanita">Wanita</option></select></div>
+      <div class="form-group"><label for="status">Status Menikah</label><select name="status" id="status" required><option value="">-- Pilih --</option><option value="Menikah">Menikah</option><option value="Tidak Menikah">Tidak Menikah</option></select></div>
+      <div class="form-group"><label for="tempat">Tempat Lahir</label><input type="text" name="tempat" id="tempat" required></div>
+      <div class="form-group"><label for="tgl">Tanggal Lahir</label><input type="date" name="tgl" id="tgl" required></div>
+      <div class="form-group"><label for="alamat">Alamat Lengkap</label><input type="text" name="alamat" id="alamat" required></div>
+      <div class="form-group"><label for="kodepos">Kode Pos</label><input type="text" name="kodepos" id="kodepos" required></div>
+      <div class="form-group"><label for="wa">Nomor WhatsApp</label><input type="text" name="wa" id="wa" required></div>
+      <div class="form-group"><label for="departemen">Departemen</label><input type="text" name="departemen" id="departemen" required></div>
+      <!-- <button type="submit">Kirim Data</button> -->
+      <div class="form-footer">
+        <button type="submit">Kirim Data</button>
+      </div>
+    </form>
+  </div>
+  <script src="script.js"></script>
+  <script>
+  let videoElement = document.getElementById("video");
+  let stream = null;
+
+  // Fungsi nyalakan kamera
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoElement.srcObject = stream;
+    } catch (err) {
+      console.error("Gagal mengakses kamera:", err);
+    }
+  }
+
+  // Fungsi matikan kamera
+  function stopCamera() {
+    if (stream) {
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      stream = null;
+      videoElement.srcObject = null;
+    }
+  }
+
+  // Saat halaman dibuka, kamera langsung menyala
+  startCamera();
+
+  // Kontrol switch ON/OFF
+  document.getElementById("cameraToggle").addEventListener("change", function () {
+    if (this.checked) {
+      startCamera(); // ✅ ON
+    } else {
+      stopCamera();  // ❌ OFF
+    }
+  });
+
+  </script>
+
+<footer class="page-footer">
+  Developed by Teguh Dayanto - 2025
+</footer>
+
+</body>
+</html>

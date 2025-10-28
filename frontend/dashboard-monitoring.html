@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Monitoring Kehadiran</title>
+  <link rel="stylesheet" href="css-dashboard-monitoring/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>📊 Monitoring Kehadiran</h1>
+
+    <div class="summary-box">
+      <h2>Total Hadir Hari Ini</h2>
+      <div id="totalHariIni">0</div>
+    </div>
+
+    <div class="refresh-container">
+      <button id="refreshBtn">
+        🔄 Refresh Manual
+      </button>
+    </div>
+
+    <div class="charts">
+      <div class="card">
+        <h2>Grafik Kehadiran Harian (7 Hari Terakhir)</h2>
+        <canvas id="chartHarian"></canvas>
+        <!-- <button onclick="exportChartAsImage('chartHarian')">🖼️ Export Harian ke JPG</button> -->
+        <button class="export-button" onclick="exportChartAsImage('chartHarian')">🖼️ Export Harian ke JPG</button>
+      </div>
+
+      <div class="card">
+        <h2>Grafik Kehadiran Mingguan</h2>
+        <canvas id="chartMingguan"></canvas>
+        <!-- <button onclick="exportChartAsImage('chartMingguan')">🖼️ Export Mingguan ke JPG</button> -->
+        <button class="export-button" onclick="exportChartAsImage('chartMingguan')">🖼️ Export Mingguan ke JPG</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📋 Tabel Detail Kehadiran</h2>
+      <!-- <button onclick="exportTableToExcel()">📤 Export ke Excel</button> -->
+      <button class="export-button" onclick="exportTableToExcel()">📤 Export ke Excel</button>
+      <div class="table-wrapper">
+        <table id="detailTable">
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Tanggal</th>
+              <th>Waktu</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let chartHarian = null;
+    let chartMingguan = null;
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      loadData();
+    });
+
+    function loadData() {
+      fetch('../php/kehadiran/data-kehadiran.php')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('totalHariIni').innerText = data.total_hari_ini;
+
+          const labelsHarian = data.harian.map(d => d.tanggal).reverse();
+          const jumlahHarian = data.harian.map(d => d.jumlah).reverse();
+
+          if (chartHarian) chartHarian.destroy();
+          if (chartMingguan) chartMingguan.destroy();
+
+          chartHarian = new Chart(document.getElementById('chartHarian'), {
+            type: 'bar',
+            data: {
+              labels: labelsHarian,
+              datasets: [{
+                label: 'Jumlah Hadir',
+                data: jumlahHarian,
+                backgroundColor: '#89CFF0',   // Cool Blue
+                // borderColor: '#3867d6',
+                // borderWidth: 1
+                borderRadius: {
+                  topLeft: 8,
+                  topRight: 8  // 🎯 rounded sisi atas
+                },
+                borderSkipped: false         // 🔁 agar semua sisi dapat rounded
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                x: {
+                  ticks: {
+                    font: { family: 'Montserrat', size: 18 }
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    font: { family: 'Montserrat', size: 18 },
+                    stepSize: 1,
+                    callback: function(value) {
+                      if (Number.isInteger(value)) return value;
+                    }
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  labels: {
+                    font: { family: 'Montserrat', size: 16 }
+                  }
+                }
+              }
+            }
+          });
+
+          const minggu = {};
+          labelsHarian.forEach((tanggal, i) => {
+            const mingguKe = 'Minggu ' + getWeekNumber(new Date(tanggal));
+            minggu[mingguKe] = (minggu[mingguKe] || 0) + parseInt(jumlahHarian[i]);
+          });
+
+          const labelsMingguan = Object.keys(minggu);
+          const jumlahMingguan = Object.values(minggu);
+
+          chartMingguan = new Chart(document.getElementById('chartMingguan'), {
+            type: 'line',
+            data: {
+              labels: labelsMingguan,
+              datasets: [{
+                label: 'Akumulasi Hadir per Minggu',
+                data: jumlahMingguan,
+                fill: true,
+                borderColor: '#a55eea',
+                backgroundColor: '#dcd6f7',
+                tension: 0.3
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                x: {
+                  ticks: { font: { family: 'Montserrat', size: 18 } }
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: { font: { family: 'Montserrat', size: 18 } }
+                }
+              },
+              plugins: {
+                legend: {
+                  labels: { font: { family: 'Montserrat', size: 16 } }
+                }
+              }
+            }
+          });
+
+          // ✅ Muat data ke tabel
+          const tbody = document.querySelector('#detailTable tbody');
+          tbody.innerHTML = '';
+          data.detail.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${item.nama}</td>
+              <td>${item.tanggal}</td>
+              <td>${item.waktu}</td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+    }
+
+    function getWeekNumber(d) {
+      d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+      return weekNo;
+    }
+
+    // ⏱ Muat data saat awal
+    loadData();
+
+    // 🔁 Refresh otomatis setiap 60 detik
+    setInterval(loadData, 60000);
+
+    function exportChartAsImage(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const image = canvas.toDataURL("image/jpeg", 1.0);
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = canvasId + '.jpg';
+      link.click();
+    }
+
+    function exportTableToExcel() {
+      const table = document.getElementById("detailTable");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Kehadiran" });
+      XLSX.writeFile(wb, "tabel_kehadiran.xlsx");
+    }
+
+</script>
+
+  <footer class="page-footer">
+    Developed by Teguh Dayanto - 2025
+  </footer>
+</body>
+</html>

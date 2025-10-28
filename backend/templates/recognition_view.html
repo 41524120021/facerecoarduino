@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deteksi Wajah Real-Time</title>
+
+  <!-- Font Montserrat -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 2rem;
+    }
+
+    #video-container {
+      position: relative;
+      width: 95%;
+      max-width: 720px;
+      margin: 20px auto 10px auto;
+    }
+
+    #video-container img {
+      width: 100%;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    #info-box {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 10px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      text-align: left;
+    }
+
+    #bukaPintu {
+      margin-top: 8px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    #bukaPintu:hover:not(:disabled) {
+      background-color: #0056b3;
+    }
+
+    #bukaPintu:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    footer.page-footer {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-top: 40px;
+      margin-bottom: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      #info-box {
+        font-size: 0.8rem;
+        padding: 8px;
+      }
+
+      #bukaPintu {
+        font-size: 0.9rem;
+        padding: 10px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Deteksi Wajah Real-Time</h1>
+
+  <div id="video-container">
+    <img src="{{ url_for('video_feed') }}" alt="Video Streaming" />
+    <div id="info-box">
+      <div id="nama">Nama Lengkap: -</div>
+      <div id="waktu">Realtime: -</div>
+    </div>
+  </div>
+
+  <button id="bukaPintu" disabled>Buka Pintu</button>
+
+  <script>
+    // 🔁 Update status wajah secara realtime
+    function updateInfo() {
+      fetch('/terakhir')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("nama").innerText = "Nama Lengkap: " + data.nama;
+          document.getElementById("waktu").innerText = "Realtime: " + data.waktu;
+
+          // Aktifkan tombol jika wajah dikenal
+          const tombol = document.getElementById("bukaPintu");
+          tombol.disabled = (data.nama === "-" || data.nama === "Tidak Dikenal");
+        })
+        .catch(err => console.error("Gagal memperbarui data:", err));
+    }
+
+    setInterval(updateInfo, 1000);
+
+    // 🚪 Kirim perintah buka pintu ke Flask (yang akan publish MQTT)
+    document.getElementById("bukaPintu").addEventListener("click", () => {
+      fetch("/buka_pintu", { method: "POST" })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.pesan);
+        })
+        .catch(err => {
+          alert("❌ Gagal mengirim perintah ke server!");
+          console.error(err);
+        });
+    });
+  </script>
+
+  <footer class="page-footer">
+    Developed by Teguh Dayanto - 2025
+  </footer>
+</body>
+</html>

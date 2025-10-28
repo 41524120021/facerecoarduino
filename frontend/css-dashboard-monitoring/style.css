@@ -1,0 +1,191 @@
+body {
+  font-family: 'Montserrat', sans-serif;
+  /* background: linear-gradient(to right, #6a11cb, #2575fc); */
+  /* background-color: #f4f7fa; latar belakang terang */
+  background-color: white;
+  color: #333;               /* teks warna gelap */
+  margin: 0;
+  padding: 0;
+  /* color: white; */
+}
+
+.dashboard-container {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  color: #333;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.dashboard-container h1 {
+  margin-top: 5px;  /* ✅ lebih rapat ke atas */
+  margin-bottom: 25px;
+}
+
+.summary-box h2 {
+  font-size: 27px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+h1, h2, h3 {
+  text-align: center;
+}
+
+.summary-box {
+  background: #f0f8ff;
+  /* padding: 10px 20px;  ⬅️ 10px atas-bawah, 20px kiri-kanan */
+  padding: 10px 20px 20px 20px;  /* 🔽 Kurangi padding atas dari 20px ke 10px */
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.chart-wrapper {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* NEW */
+.charts {
+  /* background: #f0f8ff; */
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background-color: #ffffff; /* Tambahkan ini jika perlu */
+}
+
+.card {
+  /* background: linear-gradient(to right, #6a11cb, #2575fc); */
+  /* background-color: #ffffff;           putih bersih */
+  background: #f0f8ff;
+  padding: 20px;
+  border-radius: 12px;
+  /* box-shadow: 0 4px 20px rgba(0,0,0,0.2); */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* efek 3D ringan */
+  color: #333;
+  margin: 17px;
+  /* color: white; */
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end; /* ⏩ Tombol ke kanan */
+  margin-top: 100px;
+}
+.page-footer {
+  text-align: center;
+  font-size: 16px;
+  color: #777;
+  margin-top: 1px;
+  margin-bottom: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+/* NEW */
+#totalHariIni {
+  font-size: 55px;     /* Ukuran besar */
+  font-weight: bold;   /* Tebal */
+  margin-top: 5px;
+  /* color: #2d3436;       Warna teks gelap */
+  color: #333;
+}
+
+.refresh-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+#refreshBtn {
+  background-color: #4b7bec;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 18px;              /* 🔍 Ukuran teks diperbesar */
+  font-family: 'Montserrat', sans-serif;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: background-color 0.3s ease;
+}
+
+#refreshBtn:hover {
+  background-color: #3867d6;
+}
+
+/*
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+#tabelKehadiran {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Montserrat', sans-serif;
+}
+
+#tabelKehadiran th,
+#tabelKehadiran td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+#tabelKehadiran th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+#tabelKehadiran tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+*/
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+#detailTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+#detailTable th, #detailTable td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+#detailTable th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.export-button {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: #4b7bec;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin: 15px 10px 5px 5px;
+  transition: background 0.3s;
+}
+
+.export-button:hover {
+  background-color: #3867d6;
+}

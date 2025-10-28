@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deteksi Wajah</title>
+
+  <!-- Import font Montserrat dari Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 2rem;
+    }
+
+    #video-container {
+      position: relative;
+      width: 95%;
+      max-width: 720px;
+      /* margin: 20px auto; */
+      margin: 20px auto 10px auto; /* ↓ mengurangi jarak bawah */
+    }
+
+    #video-container img {
+      width: 100%; /* ✅ Responsive width */
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    #info-box {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 10px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      text-align: left;
+    }
+
+    #bukaPintu {
+      /* margin-top: 20px; */
+      margin-top: 8px; /* 🧩 jarak atas tombol dari video */
+      padding: 12px 24px;
+      font-size: 1rem;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #bukaPintu:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .form-footer {
+      display: flex;
+      justify-content: flex-end; /* ⏩ Tombol ke kanan */
+      margin-top: 100px;
+    }
+    .page-footer {
+      text-align: center;
+      font-size: 16px;
+      color: #777;
+      margin-top: 1px;
+      margin-bottom: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+    
+    /* ✅ Responsive adjustments */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      #info-box {
+        font-size: 0.8rem;
+        padding: 8px;
+      }
+
+      #bukaPintu {
+        font-size: 0.9rem;
+        padding: 10px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Deteksi Wajah Real-Time</h1>
+  <div id="video-container">
+    <img src="{{ url_for('video_feed') }}" width="720" height="540" />
+    <div id="info-box">
+      <div id="nama">Nama Lengkap: -</div>
+      <div id="waktu">Realtime: -</div>
+    </div>
+  </div>
+  <br />
+  <button id="bukaPintu" disabled>Buka Pintu</button>
+
+  <script>
+    function updateInfo() {
+      fetch('/terakhir')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("nama").innerText = "Nama Lengkap: " + data.nama;
+          document.getElementById("waktu").innerText = "Realtime: " + data.waktu;
+
+          const tombol = document.getElementById("bukaPintu");
+          tombol.disabled = (data.nama === "-" || data.nama === "Tidak Dikenal");
+        });
+    }
+
+    setInterval(updateInfo, 1000);
+
+    // document.getElementById("bukaPintu").addEventListener("click", () => {
+    //   fetch("http://localhost:1880/buka-pintu") // sesuaikan dengan server kontrol pintu Anda
+    //     .then(() => alert("Perintah buka pintu dikirim!"));
+    // });
+    
+    document.getElementById("bukaPintu").addEventListener("click", () => {
+      fetch("/buka_pintu", { method: "POST" })
+        .then(res => res.json())
+        .then(data => alert(data.pesan))
+        .catch(err => alert("Gagal mengirim perintah ke server!"));
+    });
+
+
+
+  </script>
+
+<footer class="page-footer">
+  Developed by Teguh Dayanto - 2025
+</footer>
+
+</body>
+</html>
