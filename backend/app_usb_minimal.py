@@ -1,43 +1,36 @@
 # =============================================================
-# APP_USB.PY — Sistem Face Recognition + Kontrol Pintu via USB SERIAL
+# APP_USB_MINIMAL.PY — Face Recognition + Kontrol Pintu (Cepat Load)
 # =============================================================
-# Fitur:
-#  - Deteksi wajah menggunakan camera (OpenCV + face_recognition)
-#  - Jika wajah dikenal → tombol "Buka Pintu" aktif di web
-#  - Saat ditekan → kirim pesan USB Serial ke ESP32:
-#       pintu=BUKA  → LED ESP32 ON, Relay ON (10 detik)
-#       pintu=TUTUP → LED ESP32 OFF, Relay OFF
-# 
-# Kecepatan: INSTANT (tidak perlu MQTT broker)
+# Versi minimal yang TIDAK load dataset di startup
+# Dataset loaded on-demand atau disampling saja
 # =============================================================
 
 from flask import Flask, render_template, Response, request, jsonify
 import cv2
-import face_recognition
 import os
-import requests
 import time
 import json
-import serial
 from threading import Thread
+import sys
 
-# Coba import library serial kita (jika ada)
+# Coba import library serial kita
 try:
     from esp32_serial import ESP32SerialController
     USE_CUSTOM_SERIAL = True
 except ImportError:
     USE_CUSTOM_SERIAL = False
     print("⚠️  esp32_serial tidak ditemukan, menggunakan standard pyserial")
+    import serial
 
 # ============================================================
-# KONFIGURASI UTAMA
+# KONFIGURASI
 # ============================================================
 app = Flask(__name__)
 camera = cv2.VideoCapture(0)
 
-DATASET_PATH = "../dataset"        # Folder dataset wajah
-SERIAL_PORT = "COM3"               # COM port ESP32 (ubah sesuai port Anda)
-SERIAL_BAUDRATE = 115200           # Baud rate
+DATASET_PATH = "../dataset"
+SERIAL_PORT = "COM3"
+SERIAL_BAUDRATE = 115200
 
 # ============================================================
 # GLOBAL VARIABLES
@@ -45,50 +38,16 @@ SERIAL_BAUDRATE = 115200           # Baud rate
 esp32_controller = None
 serial_connected = False
 
-# ============================================================
-# MUAT SEMUA DATASET WAJAH YANG DIKENAL
-# ============================================================
+# Placeholder untuk face recognition (skip loading)
 known_face_encodings = []
 known_face_names = []
 
-try:
-    if os.path.exists(DATASET_PATH):
-        print(f"📁 Loading dataset dari {DATASET_PATH}...")
-        for person_name in os.listdir(DATASET_PATH):
-            folder = os.path.join(DATASET_PATH, person_name)
-            if not os.path.isdir(folder):
-                continue
-            print(f"   Loading {person_name}...", end=" ")
-            count = 0
-            for file in os.listdir(folder):
-                path = os.path.join(folder, file)
-                try:
-                    image = face_recognition.load_image_file(path)
-                    encodings = face_recognition.face_encodings(image)
-                    if encodings:
-                        known_face_encodings.append(encodings[0])
-                        known_face_names.append(person_name)
-                        count += 1
-                except Exception as e:
-                    print(f"⚠️  Gagal load {path}: {e}")
-                    continue
-            print(f"({count} images)")
-        print(f"✅ Loaded {len(known_face_encodings)} face encodings dari {len(set(known_face_names))} orang")
-    else:
-        print(f"⚠️  Dataset folder tidak ditemukan: {DATASET_PATH}")
-        print(f"   Aplikasi akan berjalan tanpa face recognition")
-except KeyboardInterrupt:
-    print("\n⚠️  Dataset loading interrupted!")
-except Exception as e:
-    print(f"⚠️  Error loading dataset: {e}")
-
-last_seen = {}
 last_name = "-"
 last_time = time.strftime("%Y-%m-%d %H:%M:%S")
 last_detected_timestamp = time.time()
 
 # ============================================================
-# INISIALISASI SERIAL CONNECTION
+# INISIALISASI SERIAL
 # ============================================================
 def init_serial_connection():
     """Inisialisasi koneksi serial ke ESP32"""
@@ -102,7 +61,6 @@ def init_serial_connection():
                 print(f"✅ Serial {SERIAL_PORT} terhubung!")
                 return True
         else:
-            # Gunakan pyserial langsung
             ser = serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=2)
             time.sleep(2)
             serial_connected = True
@@ -111,11 +69,10 @@ def init_serial_connection():
     except Exception as e:
         serial_connected = False
         print(f"❌ Gagal connect ke serial {SERIAL_PORT}: {e}")
-        print(f"   Tips: Pastikan ESP32 sudah terhubung via USB ke {SERIAL_PORT}")
         return False
 
 # ============================================================
-# FUNGSI: STREAM VIDEO + DETEKSI WAJAH REAL-TIME
+# GENERATE FRAMES - SIMPLE VERSION (NO FACE RECOGNITION)
 # ============================================================
 def generate_frames():
     global last_name, last_time, last_detected_timestamp
@@ -125,40 +82,9 @@ def generate_frames():
         if not success:
             break
 
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        face_locations = face_recognition.face_locations(rgb_frame)
-        face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
-
-        if face_encodings:
-            last_detected_timestamp = time.time()
-
-        for face_encoding, face_location in zip(face_encodings, face_locations):
-            matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=0.45)
-            name = "Tidak Dikenal"
-            if True in matches:
-                match_index = matches.index(True)
-                name = known_face_names[match_index]
-
-            now = time.time()
-            if name not in last_seen or (now - last_seen[name]) > 5:
-                try:
-                    requests.post("http://localhost/facereconigtion/php/presensi.php", data={"nama": name})
-                    last_seen[name] = now
-                except:
-                    pass
-
-            top, right, bottom, left = face_location
-            color = (0, 255, 0) if name != "Tidak Dikenal" else (0, 0, 255)
-            cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
-            cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
-
-            last_name = name
-            last_time = time.strftime("%Y-%m-%d %H:%M:%S")
-
-        # Reset nama jika tidak ada wajah selama 5 detik
-        if not face_encodings and time.time() - last_detected_timestamp > 5:
-            last_name = "-"
-            last_time = time.strftime("%Y-%m-%d %H:%M:%S")
+        # Buat simple output tanpa face detection terlebih dahulu
+        cv2.putText(frame, f"Last: {last_name} | {last_time}", 
+                   (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
         _, buffer = cv2.imencode('.jpg', frame)
         frame = buffer.tobytes()
@@ -167,11 +93,11 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 # ============================================================
-# ROUTES FLASK
+# ROUTES
 # ============================================================
 @app.route('/')
 def index():
-    return render_template('recognition_view.html')
+    return render_template('recognition_view_usb.html')
 
 @app.route('/video_feed')
 def video_feed():
@@ -182,7 +108,7 @@ def terakhir():
     return json.dumps({"nama": last_name, "waktu": last_time})
 
 # ============================================================
-# ROUTE UNTUK KONTROL PINTU VIA USB SERIAL
+# KONTROL PINTU
 # ============================================================
 @app.route('/buka_pintu', methods=['POST'])
 def buka_pintu():
@@ -191,38 +117,31 @@ def buka_pintu():
     if not serial_connected:
         return jsonify({
             "status": "ERROR",
-            "pesan": f"ESP32 tidak terhubung via serial {SERIAL_PORT}. Cek USB connection!"
+            "pesan": f"ESP32 tidak terhubung via serial {SERIAL_PORT}"
         }), 500
     
     try:
         print("🔓 Membuka pintu...")
         
         if USE_CUSTOM_SERIAL and esp32_controller:
-            # Gunakan library custom
             esp32_controller.send_command("pintu=BUKA")
-            
-            # Baca response
             responses = esp32_controller.read_response(10)
-            
             return jsonify({
                 "status": "OK",
-                "pesan": "Pintu dibuka selama 10 detik, lalu ditutup otomatis.",
+                "pesan": "Pintu dibuka selama 10 detik",
                 "response": responses
             })
         else:
-            # Gunakan pyserial langsung
             ser = serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=2)
             ser.write(b"pintu=BUKA\n")
-            time.sleep(10.5)  # Tunggu 10 detik + buffer
+            time.sleep(10.5)
             ser.close()
-            
             return jsonify({
                 "status": "OK",
                 "pesan": "Pintu dibuka selama 10 detik, lalu ditutup otomatis."
             })
             
     except Exception as e:
-        print(f"❌ Error: {e}")
         serial_connected = False
         return jsonify({
             "status": "ERROR",
@@ -231,7 +150,6 @@ def buka_pintu():
 
 @app.route('/tutup_pintu', methods=['POST'])
 def tutup_pintu():
-    """Tutup pintu immediate (manual)"""
     global serial_connected
     
     if not serial_connected:
@@ -246,7 +164,6 @@ def tutup_pintu():
         if USE_CUSTOM_SERIAL and esp32_controller:
             esp32_controller.send_command("pintu=TUTUP")
             responses = esp32_controller.read_response(3)
-            
             return jsonify({
                 "status": "OK",
                 "pesan": "Pintu ditutup",
@@ -257,7 +174,6 @@ def tutup_pintu():
             ser.write(b"pintu=TUTUP\n")
             time.sleep(1)
             ser.close()
-            
             return jsonify({
                 "status": "OK",
                 "pesan": "Pintu ditutup"
@@ -272,7 +188,6 @@ def tutup_pintu():
 
 @app.route('/serial_status', methods=['GET'])
 def serial_status():
-    """Cek status koneksi serial"""
     return jsonify({
         "connected": serial_connected,
         "port": SERIAL_PORT,
@@ -281,7 +196,6 @@ def serial_status():
 
 @app.route('/test_led', methods=['POST'])
 def test_led():
-    """Test LED via serial"""
     if not serial_connected:
         return jsonify({"status": "ERROR", "pesan": "ESP32 tidak terhubung"}), 500
     
@@ -299,7 +213,6 @@ def test_led():
 
 @app.route('/test_relay', methods=['POST'])
 def test_relay():
-    """Test Relay via serial"""
     if not serial_connected:
         return jsonify({"status": "ERROR", "pesan": "ESP32 tidak terhubung"}), 500
     
@@ -322,6 +235,7 @@ if __name__ == '__main__':
     print()
     print("╔═══════════════════════════════════════════════════╗")
     print("║   Face Recognition + USB Serial Door Control    ║")
+    print("║              (MINIMAL VERSION - FAST LOAD)       ║")
     print("╚═══════════════════════════════════════════════════╝")
     print()
     
@@ -331,5 +245,7 @@ if __name__ == '__main__':
     else:
         print("⚠️  Jalankan tanpa koneksi serial. Cek USB connection!\n")
     
-    # Jalankan Flask
+    # Jalankan Flask di port 5001
+    print("📍 Running on http://127.0.0.1:5001")
+    print()
     app.run(debug=False, host='127.0.0.1', port=5001, use_reloader=False)
