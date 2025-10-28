@@ -64,7 +64,7 @@ def generate_frames():
             now = time.time()
             if name not in last_seen or (now - last_seen[name]) > 5:
                 try:
-                    requests.post("http://localhost/007-face-recognition-riska/005-face-recognition-iot/php/presensi.php", data={"nama": name})
+                    requests.post("http://localhost/facerecognition/php/presensi.php", data={"nama": name})
                     last_seen[name] = now
                 except:
                     pass

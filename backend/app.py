@@ -30,7 +30,7 @@ camera = cv2.VideoCapture(0)
 DATASET_PATH = "../dataset"        # Folder dataset wajah
 MQTT_BROKER = "broker.hivemq.com"  # Broker MQTT publik
 MQTT_PORT = 1883
-MQTT_TOPIC = "fc/galih"
+MQTT_TOPIC = "fc/pintu"
 
 # -------------------------------------------------------------
 # MUAT SEMUA DATASET WAJAH YANG DIKENAL
@@ -132,22 +132,22 @@ def buka_pintu():
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
         print(f"✅ Terhubung ke broker {MQTT_BROKER}:{MQTT_PORT}")
 
-        # 1️⃣ Kirim status "galih=BUKA"
-        client.publish(MQTT_TOPIC, "galih=BUKA")
-        print(f"📡 MQTT publish: galih=BUKA → topik {MQTT_TOPIC}")
+        # 1️⃣ Kirim status "pintu=BUKA"
+        client.publish(MQTT_TOPIC, "pintu=BUKA")
+        print(f"📡 MQTT publish: pintu=BUKA → topik {MQTT_TOPIC}")
 
-        # 2️⃣ Tunggu 10 detik (galih terbuka)
+        # 2️⃣ Tunggu 10 detik (pintu terbuka)
         time.sleep(10)
 
-        # 3️⃣ Kirim status "galih=TUTUP"
-        client.publish(MQTT_TOPIC, "galih=TUTUP")
-        print(f"📡 MQTT publish: galih=TUTUP → topik {MQTT_TOPIC}")
+        # 3️⃣ Kirim status "pintu=TUTUP"
+        client.publish(MQTT_TOPIC, "pintu=TUTUP")
+        print(f"📡 MQTT publish: pintu=TUTUP → topik {MQTT_TOPIC}")
 
         client.disconnect()
 
         return json.dumps({
             "status": "OK",
-            "pesan": "galih dibuka selama 10 detik, lalu ditutup otomatis."
+            "pesan": "pintu dibuka selama 10 detik, lalu ditutup otomatis."
         })
     except Exception as e:
         print(f"❌ Gagal MQTT: {e}")

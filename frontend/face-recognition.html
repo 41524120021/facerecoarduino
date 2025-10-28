@@ -26,6 +26,28 @@
       font-size: 2rem;
     }
 
+    .alert {
+      max-width: 720px;
+      margin: 20px auto;
+      padding: 15px;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      color: #856404;
+    }
+
+    .alert.error {
+      background: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+
+    .alert.success {
+      background: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+
     #video-container {
       position: relative;
       width: 95%;
@@ -73,6 +95,21 @@
       cursor: not-allowed;
     }
 
+    #status {
+      max-width: 720px;
+      margin: 10px auto;
+      padding: 10px;
+      font-size: 0.9rem;
+    }
+
+    .status-ok {
+      color: #28a745;
+    }
+
+    .status-error {
+      color: #dc3545;
+    }
+
     footer.page-footer {
       text-align: center;
       font-size: 16px;
@@ -103,8 +140,10 @@
 <body>
   <h1>Deteksi Wajah Real-Time</h1>
 
+  <div id="alert-container"></div>
+
   <div id="video-container">
-    <img id="videoStream" src="/video_feed" alt="Video Streaming" />
+    <img id="videoStream" src="http://127.0.0.1:5000/video_feed" alt="Video Streaming" onerror="handleImageError()" />
     <div id="info-box">
       <div id="nama">Nama Lengkap: -</div>
       <div id="waktu">Realtime: -</div>
@@ -112,35 +151,94 @@
   </div>
 
   <button id="bukaPintu" disabled>Buka Pintu</button>
+  
+  <div id="status"></div>
 
   <script>
+    const FLASK_URL = 'http://127.0.0.1:5000';
+    let connectionError = false;
+
+    // Handle image loading error
+    function handleImageError() {
+      if (!connectionError) {
+        connectionError = true;
+        showAlert('Flask server tidak berjalan. Pastikan aplikasi Flask sudah dijalankan di http://127.0.0.1:5000', 'error');
+      }
+    }
+
+    // Show alert message
+    function showAlert(message, type = 'warning') {
+      const container = document.getElementById('alert-container');
+      container.innerHTML = `<div class="alert ${type}">${message}</div>`;
+    }
+
     // 🔁 Update status wajah secara realtime
     function updateInfo() {
-      fetch('/terakhir')
-        .then(response => response.json())
+      fetch(`${FLASK_URL}/terakhir`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return response.json();
+        })
         .then(data => {
+          // Clear connection error if successful
+          if (connectionError) {
+            connectionError = false;
+            document.getElementById('alert-container').innerHTML = '';
+          }
+
           document.getElementById("nama").innerText = "Nama Lengkap: " + data.nama;
           document.getElementById("waktu").innerText = "Realtime: " + data.waktu;
 
           // Aktifkan tombol jika wajah dikenal
           const tombol = document.getElementById("bukaPintu");
           tombol.disabled = (data.nama === "-" || data.nama === "Tidak Dikenal");
+
+          // Update status
+          const statusDiv = document.getElementById("status");
+          statusDiv.className = 'status-ok';
+          statusDiv.innerHTML = '🟢 Terhubung ke Flask server';
         })
-        .catch(err => console.error("Gagal memperbarui data:", err));
+        .catch(err => {
+          console.error("Gagal memperbarui data:", err);
+          
+          // Show error only once
+          if (!connectionError) {
+            connectionError = true;
+            showAlert('Tidak dapat terhubung ke Flask server. Pastikan server berjalan di http://127.0.0.1:5000', 'error');
+          }
+
+          const statusDiv = document.getElementById("status");
+          statusDiv.className = 'status-error';
+          statusDiv.innerHTML = '🔴 Terputus dari Flask server';
+        });
     }
 
+    // Start updating info
     setInterval(updateInfo, 1000);
+    updateInfo(); // Call immediately
 
     // 🚪 Kirim perintah buka pintu ke Flask (yang akan publish MQTT)
     document.getElementById("bukaPintu").addEventListener("click", () => {
-      fetch("/buka_pintu", { method: "POST" })
+      const button = document.getElementById("bukaPintu");
+      button.disabled = true;
+      button.innerText = "Membuka pintu...";
+
+      fetch(`${FLASK_URL}/buka_pintu`, { method: "POST" })
         .then(res => res.json())
         .then(data => {
-          alert(data.pesan);
+          showAlert(data.pesan, data.status === 'OK' ? 'success' : 'error');
+          setTimeout(() => {
+            button.disabled = false;
+            button.innerText = "Buka Pintu";
+          }, 2000);
         })
         .catch(err => {
-          alert("❌ Gagal mengirim perintah ke server!");
+          showAlert("❌ Gagal mengirim perintah ke server!", 'error');
           console.error(err);
+          button.disabled = false;
+          button.innerText = "Buka Pintu";
         });
     });
   </script>
