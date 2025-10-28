@@ -75,25 +75,57 @@ void loop() {
     // ========================================================
     if (message == "pintu=BUKA") {
       Serial.println("🔓 BUKA PINTU!");
+      Serial.println("💡 LED berkedip + 📣 RELAY terus bunyi (10 detik)");
       
-      // Nyalakan LED
-      digitalWrite(LED_PIN, HIGH);
-      Serial.println("💡 LED ON");
+      // Waktu mulai dan durasi
+      unsigned long startTime = millis();
+      unsigned long duration = 10000;  // 10 detik
+      unsigned long blinkInterval = 300;  // Kedip setiap 300ms
+      unsigned long lastBlink = 0;
+      boolean ledState = LOW;
       
-      // Nyalakan Relay (buzzer bunyi)
-      digitalWrite(RELAY_PIN, HIGH);
-      Serial.println("📣 RELAY ON (Buzzer bunyi)");
+      // Loop selama 10 detik
+      while (millis() - startTime < duration) {
+        // ========================
+        // LED BERKEDIP (300ms)
+        // ========================
+        if (millis() - lastBlink >= blinkInterval) {
+          ledState = !ledState;  // Toggle LED
+          digitalWrite(LED_PIN, ledState);
+          lastBlink = millis();
+          
+          if (ledState == HIGH) {
+            Serial.print(".");  // Tanda kedip
+          }
+        }
+        
+        // ========================
+        // RELAY TERUS BUNYI
+        // ========================
+        digitalWrite(RELAY_PIN, HIGH);
+        
+        // Check serial input (jika ada TUTUP command sebelum 10 detik)
+        if (Serial.available() > 0) {
+          String earlyCmd = Serial.readStringUntil('\n');
+          earlyCmd.trim();
+          if (earlyCmd == "pintu=TUTUP") {
+            Serial.println("\n⚠️  TUTUP PINTU MANUAL!");
+            digitalWrite(LED_PIN, LOW);
+            digitalWrite(RELAY_PIN, LOW);
+            Serial.println("✅ SELESAI (TUTUP MANUAL)");
+            break;  // Keluar dari loop
+          }
+        }
+        
+        delay(50);  // Delay kecil untuk prevent watchdog
+      }
       
-      // Tunggu 10 detik
-      Serial.println("⏱️  Tunggu 10 detik...");
-      delay(10000);
-      
-      // Matikan LED dan Relay (automatic)
+      // Matikan LED dan Relay setelah 10 detik
       digitalWrite(LED_PIN, LOW);
       digitalWrite(RELAY_PIN, LOW);
-      Serial.println("💡 LED OFF");
-      Serial.println("📣 RELAY OFF (Buzzer diam)");
-      Serial.println("✅ SELESAI");
+      Serial.println("\n💡 LED OFF");
+      Serial.println("📣 RELAY OFF");
+      Serial.println("✅ SELESAI (Auto-close 10 detik)");
     }
 
     // ========================================================
