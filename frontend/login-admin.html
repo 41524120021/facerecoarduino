@@ -240,7 +240,7 @@
       <div class="login-body">
         <div id="alertContainer"></div>
 
-        <form id="loginForm" method="POST" action="php/admin/login.php">
+        <form id="loginForm" method="POST" action="../php/admin/login.php">
           <div class="form-group">
             <label for="email">Email</label>
             <div class="input-wrapper">
@@ -333,7 +333,7 @@
       btnSpinner.style.display = 'inline-block';
 
       try {
-        const response = await fetch('php/admin/login.php', {
+        const response = await fetch('../php/admin/login.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
